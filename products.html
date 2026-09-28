@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Materials & Payment</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><nav class="navbar"><a class="logo" href="index.html">Event<span>Pro</span></a><div class="nav-links"><a href="index.html">Home</a><a class="active" href="products.html">Materials</a><a href="services.html">Services</a><a href="contact.html">Contact</a></div></nav></header>
+<main class="section"><div class="products-heading"><div><p class="tagline">OUR MATERIALS</p><h1>Choose Your Event Materials</h1><p>Click a material, select quantity and add it to your enquiry.</p></div><a class="cart-button" href="#enquiry">Enquiry <span id="cartCount">0</span></a></div>
+<div id="productGrid" class="product-grid"></div>
+<section id="enquiry" class="enquiry-section"><p class="tagline">YOUR SELECTION</p><h2>Enquiry & Payment</h2><div id="cartItems"><p class="empty">No materials selected yet.</p></div><div class="enquiry-summary"><strong>Total: ₹<span id="cartTotal">0</span></strong></div>
+<div class="payment-box"><h3>Pay with Razorpay</h3><p>Replace the placeholder Payment Button ID below with the ID from your Razorpay Dashboard.</p>
+<form><script src="https://cdn.razorpay.com/static/widget/payment-button.js" data-payment_button_id="RAZORPAY_PAYMENT_BUTTON_ID" data-button_text="Pay Now with Razorpay" data-button_theme="rzp-dark-standard"></script></form>
+<small>Use Razorpay Test Mode while developing. The static Payment Button has its own configured amount; for a cart total that changes dynamically, use a secure backend/order integration.</small></div></section></main>
+<div id="productModal" class="modal"><div class="modal-box"><button class="close" onclick="closeProduct()">×</button><div id="modalContent"></div></div></div>
+<footer>© 2026 EventPro Supplies. All rights reserved.</footer>
+<script>
+const materials=[
+{id:1,name:"Chairs & Tables",icon:"🪑",price:120,description:"Comfortable event chairs and sturdy tables.",unit:"per set"},
+{id:2,name:"Event Lighting",icon:"💡",price:500,description:"Decorative LED and event lighting.",unit:"per set"},
+{id:3,name:"Tents & Canopies",icon:"🎪",price:2500,description:"Temporary tents and outdoor canopies.",unit:"per unit"},
+{id:4,name:"Decoration Items",icon:"🌸",price:800,description:"Flowers, curtains, balloons and backdrops.",unit:"per package"},
+{id:5,name:"Sound Equipment",icon:"🔊",price:1500,description:"Speakers, microphones and audio equipment.",unit:"per set"},
+{id:6,name:"Stage Materials",icon:"🪵",price:2000,description:"Stage platforms, carpets and panels.",unit:"per set"}];
+let cart=JSON.parse(localStorage.getItem("eventCart")||"[]"),selectedProduct=null,modalQty=1;
+function renderProducts(){document.getElementById("productGrid").innerHTML=materials.map(p=>`<article class="product-card" onclick="openProduct(${p.id})"><div class="product-image">${p.icon}</div><div class="product-body"><h3>${p.name}</h3><p>${p.description}</p><div class="price">From ₹${p.price.toLocaleString("en-IN")} ${p.unit}</div></div></article>`).join("")}
+function openProduct(id){selectedProduct=materials.find(p=>p.id===id);modalQty=1;document.getElementById("modalContent").innerHTML=`<div class="modal-product"><div class="big-icon">${selectedProduct.icon}</div><h2>${selectedProduct.name}</h2><p>${selectedProduct.description}</p><div class="modal-price">₹${selectedProduct.price.toLocaleString("en-IN")} ${selectedProduct.unit}</div><div class="quantity-box"><button onclick="changeModalQty(-1)">−</button><span id="modalQty">1</span><button onclick="changeModalQty(1)">+</button></div><button class="btn" onclick="addSelectedToCart()">Add to Enquiry</button></div>`;document.getElementById("productModal").classList.add("show")}
+function closeProduct(){document.getElementById("productModal").classList.remove("show")}
+function changeModalQty(n){modalQty=Math.max(1,modalQty+n);document.getElementById("modalQty").textContent=modalQty}
+function addSelectedToCart(){let x=cart.find(i=>i.id===selectedProduct.id);if(x)x.qty+=modalQty;else cart.push({id:selectedProduct.id,qty:modalQty});saveCart();closeProduct();renderCart();document.getElementById("enquiry").scrollIntoView({behavior:"smooth"})}
+function updateQty(id,n){let x=cart.find(i=>i.id===id);if(!x)return;x.qty+=n;if(x.qty<=0)cart=cart.filter(i=>i.id!==id);saveCart();renderCart()}
+function removeItem(id){cart=cart.filter(i=>i.id!==id);saveCart();renderCart()}
+function saveCart(){localStorage.setItem("eventCart",JSON.stringify(cart))}
+function renderCart(){let c=document.getElementById("cartItems"),count=cart.reduce((s,i)=>s+i.qty,0);document.getElementById("cartCount").textContent=count;if(!cart.length){c.innerHTML='<p class="empty">No materials selected yet.</p>';document.getElementById("cartTotal").textContent="0";return}let total=0;c.innerHTML=cart.map(i=>{let p=materials.find(x=>x.id===i.id),sub=p.price*i.qty;total+=sub;return `<div class="cart-row"><div><h4>${p.icon} ${p.name}</h4><small>₹${p.price.toLocaleString("en-IN")} × ${i.qty}</small></div><div class="qty-controls"><button onclick="updateQty(${p.id},-1)">−</button><strong>${i.qty}</strong><button onclick="updateQty(${p.id},1)">+</button></div><strong>₹${sub.toLocaleString("en-IN")}</strong><button class="remove" onclick="removeItem(${p.id})">Remove</button></div>`}).join("");document.getElementById("cartTotal").textContent=total.toLocaleString("en-IN")}
+window.addEventListener("click",e=>{if(e.target===document.getElementById("productModal"))closeProduct()});renderProducts();renderCart();
+</script>
+</body></html>
